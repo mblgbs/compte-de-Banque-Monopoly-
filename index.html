@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fausses CB Monopoly</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Fausses cartes bancaires Monopoly</h1>
+        <p>Génère des cartes fictives pour tous les joueurs en quelques secondes.</p>
+      </header>
+
+      <section class="controls">
+        <label for="playerCount">Nombre de joueurs</label>
+        <input id="playerCount" type="number" min="2" max="8" value="4" />
+        <button id="generateBtn" type="button">Créer les CB Monopoly</button>
+        <button id="refreshBtn" type="button" class="secondary">Régénérer</button>
+      </section>
+
+      <section>
+        <h2>Cartes générées</h2>
+        <div id="cards" class="cards" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
