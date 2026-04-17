@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 from banque_monopoly import (
     BanqueMonopoly,
@@ -15,6 +17,9 @@ from banque_monopoly import (
 
 class MonopolyRequestHandler(BaseHTTPRequestHandler):
     banque = BanqueMonopoly()
+    auth_enabled = os.getenv("SERVICE_AUTH_ENABLED", "false").lower() == "true"
+    franceconnect_base_url = os.getenv("FRANCECONNECT_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+    auth_timeout_seconds = float(os.getenv("AUTH_REQUEST_TIMEOUT_SECONDS", "2.5"))
 
     def _read_json(self) -> dict:
         content_length = int(self.headers.get("Content-Length", 0))
@@ -42,11 +47,42 @@ class MonopolyRequestHandler(BaseHTTPRequestHandler):
         else:
             self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": "Erreur interne"})
 
+    def _require_auth(self) -> bool:
+        if not self.auth_enabled:
+            return True
+        auth_header = self.headers.get("Authorization", "")
+        if not auth_header.lower().startswith("bearer "):
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Authentication required"})
+            return False
+        token = auth_header[7:].strip()
+        if not token:
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Authentication required"})
+            return False
+
+        request = Request(
+            f"{self.franceconnect_base_url}/auth/introspect",
+            headers={"Authorization": f"Bearer {token}"},
+            method="GET",
+        )
+        try:
+            with urlopen(request, timeout=self.auth_timeout_seconds) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except Exception:
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "Auth provider unavailable"})
+            return False
+
+        if not payload.get("active"):
+            self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Invalid token"})
+            return False
+        return True
+
     def do_GET(self) -> None:  # noqa: N802
         try:
             path = urlparse(self.path).path
             if path == "/health":
                 self._send_json(HTTPStatus.OK, {"status": "ok"})
+                return
+            if not self._require_auth():
                 return
             if path == "/comptes":
                 comptes = [compte_en_dict(c) for c in self.banque.lister_comptes()]
@@ -65,6 +101,8 @@ class MonopolyRequestHandler(BaseHTTPRequestHandler):
         try:
             path = urlparse(self.path).path
             payload = self._read_json()
+            if not self._require_auth():
+                return
 
             if path == "/comptes":
                 nom = payload["nom"]
