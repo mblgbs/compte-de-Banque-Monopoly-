@@ -13,20 +13,13 @@ from banque_monopoly import (
     SoldeInsuffisantError,
     compte_en_dict,
 )
-from save_service_client import SaveServiceError, load_bank_state, save_bank_state
 
 
 class MonopolyRequestHandler(BaseHTTPRequestHandler):
     banque = BanqueMonopoly()
     auth_enabled = os.getenv("SERVICE_AUTH_ENABLED", "false").lower() == "true"
-    franceconnect_base_url = os.getenv("FRANCECONNECT_BASE_URL", "http://127.0.0.1:8001").rstrip("/")
+    franceconnect_base_url = os.getenv("FRANCECONNECT_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
     auth_timeout_seconds = float(os.getenv("AUTH_REQUEST_TIMEOUT_SECONDS", "2.5"))
-
-    def _persist_state(self) -> None:
-        try:
-            save_bank_state(self.banque.export_state())
-        except SaveServiceError as err:
-            print(f"[save-service] persist failed: {err}")
 
     def _read_json(self) -> dict:
         content_length = int(self.headers.get("Content-Length", 0))
@@ -115,7 +108,6 @@ class MonopolyRequestHandler(BaseHTTPRequestHandler):
                 nom = payload["nom"]
                 solde_initial = int(payload.get("solde_initial", 1500))
                 compte = self.banque.creer_compte(nom, solde_initial)
-                self._persist_state()
                 self._send_json(HTTPStatus.CREATED, compte_en_dict(compte))
                 return
 
@@ -123,7 +115,6 @@ class MonopolyRequestHandler(BaseHTTPRequestHandler):
                 compte_id = int(path.split("/")[2])
                 montant = int(payload["montant"])
                 compte = self.banque.depot(compte_id, montant)
-                self._persist_state()
                 self._send_json(HTTPStatus.OK, compte_en_dict(compte))
                 return
 
@@ -131,7 +122,6 @@ class MonopolyRequestHandler(BaseHTTPRequestHandler):
                 compte_id = int(path.split("/")[2])
                 montant = int(payload["montant"])
                 compte = self.banque.retrait(compte_id, montant)
-                self._persist_state()
                 self._send_json(HTTPStatus.OK, compte_en_dict(compte))
                 return
 
@@ -140,7 +130,6 @@ class MonopolyRequestHandler(BaseHTTPRequestHandler):
                 destination_id = int(payload["destination_id"])
                 montant = int(payload["montant"])
                 self.banque.transfert(source_id, destination_id, montant)
-                self._persist_state()
                 self._send_json(
                     HTTPStatus.OK,
                     {
@@ -156,14 +145,7 @@ class MonopolyRequestHandler(BaseHTTPRequestHandler):
             self._handle_error(err)
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8002) -> None:
-    try:
-        saved = load_bank_state()
-        if saved:
-            MonopolyRequestHandler.banque.import_state(saved)
-            print("[save-service] bank state loaded")
-    except SaveServiceError as err:
-        print(f"[save-service] unavailable at startup, in-memory fallback: {err}")
+def run_server(host: str = "0.0.0.0", port: int = 8000) -> None:
     server = ThreadingHTTPServer((host, port), MonopolyRequestHandler)
     print(f"API Monopoly disponible sur http://{host}:{port}")
     server.serve_forever()
