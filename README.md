@@ -68,6 +68,24 @@ Comportement:
 - token invalide/manquant -> `401`
 - fournisseur d'auth indisponible -> `503`
 
+## Sauvegarde centralisee (save-service + PostgreSQL)
+
+L'API bancaire charge l'etat au demarrage depuis `save-service` et persiste
+automatiquement apres:
+- creation de compte,
+- depot,
+- retrait,
+- transfert.
+
+En cas d'indisponibilite du service, l'API continue en memoire (fallback).
+
+Variables d'environnement:
+
+- `SAVE_SERVICE_BASE_URL=http://127.0.0.1:8010`
+- `SAVE_SERVICE_TIMEOUT_SECONDS=2.5`
+- `SAVE_SERVICE_RETRIES=1`
+- `SAVE_SERVICE_API_TOKEN=` (optionnel)
+
 ## Guide d'integration avec Web et Declaration
 
 Cette API est la source de verite des soldes. Les applications clientes gardent leurs IDs locaux, mais utilisent les IDs de comptes de la banque pour les mouvements d'argent.

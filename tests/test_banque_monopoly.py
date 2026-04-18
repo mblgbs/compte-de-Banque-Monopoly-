@@ -35,6 +35,19 @@ class TestBanqueMonopoly(unittest.TestCase):
         with self.assertRaises(SoldeInsuffisantError):
             self.banque.retrait(c.id_compte, 99)
 
+    def test_export_import_state_roundtrip(self):
+        a = self.banque.creer_compte("Alice", 1500)
+        self.banque.depot(a.id_compte, 100)
+        exported = self.banque.export_state()
+
+        other = BanqueMonopoly()
+        other.import_state(exported)
+
+        compte = other.obtenir_compte(a.id_compte)
+        self.assertEqual(compte.nom, "Alice")
+        self.assertEqual(compte.solde, 1600)
+        self.assertEqual(other.creer_compte("Bob", 100).id_compte, a.id_compte + 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -65,6 +65,34 @@ class BanqueMonopoly:
         self.retrait(source_id, montant)
         self.depot(destination_id, montant)
 
+    def export_state(self) -> dict:
+        return {
+            "prochain_id": self._prochain_id,
+            "comptes": [
+                {
+                    "id_compte": compte.id_compte,
+                    "nom": compte.nom,
+                    "solde": compte.solde,
+                }
+                for compte in self.lister_comptes()
+            ],
+        }
+
+    def import_state(self, state: dict) -> None:
+        comptes = state.get("comptes", [])
+        self._comptes = {}
+        max_id = 0
+        for entry in comptes:
+            compte = Compte(
+                id_compte=int(entry["id_compte"]),
+                nom=str(entry["nom"]),
+                solde=int(entry["solde"]),
+            )
+            self._comptes[compte.id_compte] = compte
+            max_id = max(max_id, compte.id_compte)
+        requested_next = int(state.get("prochain_id", max_id + 1))
+        self._prochain_id = max(max_id + 1, requested_next)
+
 
 def compte_en_dict(compte: Compte) -> dict[str, int | str]:
     return {
