@@ -18,7 +18,7 @@ from banque_monopoly import (
 class MonopolyRequestHandler(BaseHTTPRequestHandler):
     banque = BanqueMonopoly()
     auth_enabled = os.getenv("SERVICE_AUTH_ENABLED", "false").lower() == "true"
-    franceconnect_base_url = os.getenv("FRANCECONNECT_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+    franceconnect_base_url = os.getenv("FRANCECONNECT_BASE_URL", "http://127.0.0.1:8001").rstrip("/")
     auth_timeout_seconds = float(os.getenv("AUTH_REQUEST_TIMEOUT_SECONDS", "2.5"))
 
     def _read_json(self) -> dict:
@@ -145,7 +145,7 @@ class MonopolyRequestHandler(BaseHTTPRequestHandler):
             self._handle_error(err)
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8000) -> None:
+def run_server(host: str = "0.0.0.0", port: int = 8002) -> None:
     server = ThreadingHTTPServer((host, port), MonopolyRequestHandler)
     print(f"API Monopoly disponible sur http://{host}:{port}")
     server.serve_forever()

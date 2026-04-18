@@ -8,7 +8,7 @@ Cette API permet de gérer des comptes de joueurs pour une banque Monopoly.
 python api.py
 ```
 
-Serveur par défaut: `http://0.0.0.0:8000`
+Serveur par défaut: `http://0.0.0.0:8002`
 
 ## Endpoints
 
@@ -32,15 +32,15 @@ Serveur par défaut: `http://0.0.0.0:8000`
 ## Exemples curl
 
 ```bash
-curl -X POST http://localhost:8000/comptes \
+curl -X POST http://localhost:8002/comptes \
   -H 'Content-Type: application/json' \
   -d '{"nom":"Alice","solde_initial":1500}'
 
-curl -X POST http://localhost:8000/comptes/1/depot \
+curl -X POST http://localhost:8002/comptes/1/depot \
   -H 'Content-Type: application/json' \
   -d '{"montant":200}'
 
-curl -X POST http://localhost:8000/transferts \
+curl -X POST http://localhost:8002/transferts \
   -H 'Content-Type: application/json' \
   -d '{"source_id":1,"destination_id":2,"montant":100}'
 ```
@@ -58,7 +58,7 @@ Cette API peut exiger un token FranceConnect sur tous les endpoints métier.
 Variables d'environnement:
 
 - `SERVICE_AUTH_ENABLED=true` pour activer le contrôle d'auth
-- `FRANCECONNECT_BASE_URL=http://127.0.0.1:8000`
+- `FRANCECONNECT_BASE_URL=http://127.0.0.1:8001`
 - `AUTH_REQUEST_TIMEOUT_SECONDS=2.5`
 
 Comportement:
@@ -85,7 +85,7 @@ Demarrer Web Monopoly (connecte a la banque):
 
 ```bash
 cd Web-monopoly-
-set BANK_API_BASE_URL=http://127.0.0.1:8000
+set BANK_API_BASE_URL=http://127.0.0.1:8002
 set BANK_REQUEST_TIMEOUT_MS=2500
 npm install
 npm start
@@ -95,7 +95,7 @@ Demarrer Declaration Monopoly (connecte a la banque):
 
 ```bash
 cd D-claration-Monopoly-
-set BANK_API_BASE_URL=http://127.0.0.1:8000
+set BANK_API_BASE_URL=http://127.0.0.1:8002
 python api.py
 ```
 
@@ -109,7 +109,7 @@ python api.py
 Exemple de transfert banque:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/transferts \
+curl -X POST http://127.0.0.1:8002/transferts \
   -H "Content-Type: application/json" \
   -d "{\"source_id\":1,\"destination_id\":2,\"montant\":100}"
 ```
@@ -126,7 +126,7 @@ curl -X POST http://127.0.0.1:8000/transferts \
 Exemple `fetch` depuis le front:
 
 ```js
-await fetch("http://127.0.0.1:8000/declarations", {
+await fetch("http://127.0.0.1:8003/declarations", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
